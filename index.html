@@ -64,7 +64,7 @@ button:focus-visible,select:focus-visible,label:focus-within{outline:3px solid c
 <main id="lib">
   <div class="top">
     <span class="logo">AfroAura</span>
-    <label class="pill">Add books<input id="add" type="file" accept=".epub,application/epub+zip" multiple hidden></label>
+    <label class="pill">Add books<input id="add" type="file" multiple hidden></label>
   </div>
   <div id="empty" hidden>
     <h2>Your shelf is empty</h2>
@@ -150,15 +150,17 @@ async function shelf(){
 }
 
 $('#add').onchange=async e=>{
+  if(typeof ePub==='undefined'){toast('Reader engine not loaded. Connect to the internet once, then reload.');return}
   for(const f of e.target.files){
     try{
+      if(!/\.epub$/i.test(f.name))throw new Error('not an .epub file');
       const buf=await f.arrayBuffer(),bk=ePub(buf,{openAs:'binary'}),m=await bk.loaded.metadata;
       const r={id:Date.now()+Math.random().toString(36).slice(2),title:m.title||f.name.replace(/\.epub$/i,''),author:m.creator||'',added:Date.now(),opened:0,pct:0,marks:[]};
       try{const u=await bk.coverUrl();if(u)r.cover=await(await fetch(u)).blob()}catch(_){}
       await tx('files','readwrite',s=>s.put(buf,r.id));
       await tx('books','readwrite',s=>s.put(r));
       bk.destroy();
-    }catch(_){toast('Could not add '+f.name)}
+    }catch(err){console.error(err);toast('Could not add '+f.name+': '+(err&&err.message||err))}
   }
   e.target.value='';shelf();
 };
@@ -167,6 +169,9 @@ const show=v=>{$('#lib').hidden=v!=='lib';$('#reader').hidden=v!=='reader'};
 const save=()=>{clearTimeout(sv);sv=setTimeout(()=>tx('books','readwrite',s=>s.put(rec)),400)};
 
 async function openBook(id){
+  try{await openBook2(id)}catch(err){console.error(err);toast('Could not open book: '+(err&&err.message||err));show('lib')}
+}
+async function openBook2(id){
   rec=await tx('books','readonly',s=>s.get(id));
   const buf=await tx('files','readonly',s=>s.get(id));
   if(!buf){toast('This book file is missing');return}
