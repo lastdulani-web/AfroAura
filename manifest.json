@@ -1,0 +1,11 @@
+{
+  "name": "AfroAura",
+  "short_name": "AfroAura",
+  "description": "A calm offline EPUB reader",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#E1F9F4",
+  "theme_color": "#018081",
+  "icons": [{"src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}]
+}
