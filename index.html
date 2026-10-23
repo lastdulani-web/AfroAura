@@ -81,22 +81,50 @@ button:focus-visible,select:focus-visible,label:focus-within{outline:3px solid c
 #splash .d{position:absolute;bottom:calc(38px + env(safe-area-inset-bottom));font-size:14px;color:#0b3b3c;opacity:.75;letter-spacing:.3px}
 @keyframes pop{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){#splash img,#splash .n{animation:none}}
+:root{--acc:#A8F2E3}
+.top{border-bottom:3px solid var(--acc)}
+.logo{font:700 25px/1 system-ui,-apple-system,sans-serif;letter-spacing:-.3px;color:#fff}
+.logo b{color:var(--acc);font-weight:700}
+.icbtn{width:46px;height:46px;border:1.5px solid color-mix(in srgb,var(--bf) 65%,transparent);border-radius:13px;color:var(--bf);display:grid;place-items:center}
+.icbtn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2}
+.welcome{margin:22px 16px;padding:30px 18px 22px;border:1px solid color-mix(in srgb,var(--fg) 16%,transparent);border-radius:28px;background:color-mix(in srgb,var(--fg) 4%,transparent);text-align:center}
+.wl{width:96px;height:100px;object-fit:contain}
+.welcome h1{font:700 34px/1.1 system-ui,-apple-system,sans-serif;margin:14px 0 4px}
+.tg{opacity:.8;font-size:19px;margin-bottom:20px}
+.btn{display:inline-block;background:var(--bar);color:var(--bf);padding:14px 28px;border-radius:14px;font-weight:600;font-size:19px;cursor:pointer}
+.btn:focus-within{outline:3px solid currentColor;outline-offset:3px}
+.pv{font-size:14px;opacity:.65;margin:20px 8px 0}
+#rec{text-align:left;margin-top:26px}
+#rec h2{font:600 19px system-ui,-apple-system,sans-serif;margin-bottom:4px}
+#grid{padding:14px 0 6px}
+#lib.has .wl{width:56px;height:60px}
+#lib.has .welcome h1{font-size:26px;margin-bottom:14px}
+#lib.has .tg{display:none}
+.credit{font-size:14px;padding:20px 0 0}
+#splash{background:#018081;padding-bottom:5vh}
+#splash img{width:96px;height:96px;padding:14px;background:#E1F9F4;border-radius:27px;object-fit:contain;animation:pop .8s ease-out both}
+#splash .n{font:700 40px/1.1 system-ui,-apple-system,sans-serif;color:#fff;margin-top:22px;letter-spacing:-.4px;animation:pop .8s .12s ease-out both}
+#splash .n b{color:var(--acc);font-weight:700}
+#splash .d{position:static;font-size:17px;color:rgba(255,255,255,.8);opacity:1;margin-top:14px;letter-spacing:0;animation:pop .8s .25s ease-out both}
 </style>
 </head>
 <body data-t="day">
-<div id="splash"><img src="logo.png" alt=""><div class="n">AfroAura</div><div class="d">Developed by Last Dulani</div></div>
+<div id="splash"><img src="logo.png" alt=""><div class="n">Afro<b>Aura</b></div><div class="d">Developed by Last Dulani</div></div>
 
 <main id="lib">
   <div class="top">
-    <span class="brand"><img src="logo.png" alt=""><span class="logo">AfroAura</span></span>
-    <label class="pill">Add books<input id="add" type="file" multiple hidden></label>
+    <span class="brand"><img src="logo.png" alt=""><span class="logo">Afro<b>Aura</b></span></span>
+    <button id="th2" class="icbtn" aria-label="Switch light or dark mode"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 010 18z" fill="currentColor"/></svg></button>
   </div>
-  <div id="empty" hidden>
-    <h2>Your shelf is empty</h2>
-    <p>Tap Add books and pick an EPUB file from your phone. Your books stay on this device and open without internet.</p>
-  </div>
-  <div id="grid"></div>
-  <p class="credit">AfroAura, built by Last Dulani</p>
+  <section class="welcome">
+    <img class="wl" src="logo.png" alt="">
+    <h1>Welcome</h1>
+    <p class="tg">Read your books for free.</p>
+    <label class="btn">Add books<input id="add" type="file" multiple hidden></label>
+    <p class="pv">Your books stay on your phone. They are not uploaded.</p>
+    <div id="rec" hidden><h2>Recently opened</h2><div id="grid"></div></div>
+    <p class="credit">AfroAura developed by Last Dulani</p>
+  </section>
 </main>
 
 <section id="reader" hidden>
@@ -171,7 +199,7 @@ function look(){
 
 async function shelf(){
   const bs=(await tx('books','readonly',s=>s.getAll())).sort((a,b)=>(b.opened||0)-(a.opened||0));
-  const g=$('#grid');g.innerHTML='';$('#empty').hidden=bs.length>0;
+  const g=$('#grid');g.innerHTML='';$('#rec').hidden=!bs.length;$('#lib').classList.toggle('has',bs.length>0);
   bs.forEach(b=>{
     const c=D.createElement('div');c.className='card';
     const o=D.createElement('button');o.className='cv';o.setAttribute('aria-label','Open '+b.title);
@@ -309,7 +337,7 @@ $('#aa').onclick=()=>openP('#set');
 D.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>{S.t=b.dataset.th;look()});
 D.querySelectorAll('[data-md]').forEach(b=>b.onclick=async()=>{
   if(S.m===b.dataset.md)return;S.m=b.dataset.md;look();if(book){closeP();await mount()}});
-$('#th').onclick=()=>{S.t=S.t==='night'?'day':'night';look()};
+$('#th').onclick=$('#th2').onclick=()=>{S.t=S.t==='night'?'day':'night';look()};
 let px=0,py=0,pid=null,pt=0;
 const G=$('#gest'),snap=()=>{const v=$('#viewer');v.style.transition='transform .18s ease-out';v.style.transform='none'};
 G.onpointerdown=e=>{if(busy)return;pid=e.pointerId;px=e.clientX;py=e.clientY;pt=Date.now();lock=null;drag=0;try{G.setPointerCapture(pid)}catch(_){}};
