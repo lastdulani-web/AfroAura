@@ -1,5 +1,5 @@
-const C='afroaura-v3';
-const A=['./','index.html','manifest.json','icon.svg',
+const C='afroaura-v4';
+const A=['./','index.html','manifest.json','logo.png','icon-192.png','icon-512.png','icon-maskable.png','apple-touch-icon.png',
 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js',
 'https://cdn.jsdelivr.net/npm/epubjs@0.3.93/dist/epub.min.js'];
 self.addEventListener('install',e=>{self.skipWaiting();
