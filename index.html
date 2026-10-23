@@ -106,6 +106,15 @@ button:focus-visible,select:focus-visible,label:focus-within{outline:3px solid c
 #splash .n{font:700 40px/1.1 system-ui,-apple-system,sans-serif;color:#fff;margin-top:22px;letter-spacing:-.4px;animation:pop .8s .12s ease-out both}
 #splash .n b{color:var(--acc);font-weight:700}
 #splash .d{position:static;font-size:17px;color:rgba(255,255,255,.8);opacity:1;margin-top:14px;letter-spacing:0;animation:pop .8s .25s ease-out both}
+.top{position:sticky;top:0;z-index:10}
+#grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:20px 12px}
+.card{position:relative}
+.card .t{font-size:13px;margin-top:6px}
+.card .a{font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cv{padding:8px;font-size:12px;border-radius:3px 8px 8px 3px}
+.cv img{width:calc(100% + 16px);height:calc(100% + 16px);margin:-8px}
+.rm{position:absolute;top:5px;right:5px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.5);color:#fff;opacity:1;text-decoration:none;display:grid;place-items:center}
+.rm svg{width:18px;height:18px;fill:currentColor}
 </style>
 </head>
 <body data-t="day">
@@ -205,7 +214,7 @@ async function shelf(){
     const o=D.createElement('button');o.className='cv';o.setAttribute('aria-label','Open '+b.title);
     if(b.cover){const i=new Image();i.alt='';i.src=URL.createObjectURL(b.cover);o.append(i)}else o.textContent=b.title;
     o.onclick=()=>openBook(b.id);
-    c.innerHTML='<p class="t"></p><p class="a"></p><div class="pb"><i></i></div><button class="rm">Remove</button>';
+    c.innerHTML='<p class="t"></p><p class="a"></p><div class="pb"><i></i></div><button class="rm" aria-label="Remove book"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>';
     c.querySelector('.t').textContent=b.title;
     c.querySelector('.a').textContent=b.author||'';
     c.querySelector('.pb i').style.width=(b.pct||0)+'%';
