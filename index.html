@@ -115,6 +115,12 @@ button:focus-visible,select:focus-visible,label:focus-within{outline:3px solid c
 .cv img{width:calc(100% + 16px);height:calc(100% + 16px);margin:-8px}
 .rm{position:absolute;top:5px;right:5px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.5);color:#fff;opacity:1;text-decoration:none;display:grid;place-items:center}
 .rm svg{width:18px;height:18px;fill:currentColor}
+#viewer{inset:calc(62px + env(safe-area-inset-top)) 16px calc(46px + env(safe-area-inset-bottom))}
+#bf{padding:9px 18px calc(9px + env(safe-area-inset-bottom));font-size:13px}
+#pc{white-space:nowrap;font-variant-numeric:tabular-nums}
+#set #sl{flex:1;margin:0;accent-color:var(--bar)}
+.rh{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:2px}
+.rh select{font-size:14px;padding:8px 10px;border-radius:10px;border:1.5px solid var(--bar);background:var(--bg);color:var(--fg);max-width:50%}
 </style>
 </head>
 <body data-t="day">
@@ -131,7 +137,7 @@ button:focus-visible,select:focus-visible,label:focus-within{outline:3px solid c
     <p class="tg">Read your books for free.</p>
     <label class="btn">Add books<input id="add" type="file" multiple hidden></label>
     <p class="pv">Your books stay on your phone. They are not uploaded.</p>
-    <div id="rec" hidden><h2>Recently opened</h2><div id="grid"></div></div>
+    <div id="rec" hidden><div class="rh"><h2>Your books</h2><select id="sort" aria-label="Sort books"><option value="recent">Recently read</option><option value="title">Title, A to Z</option><option value="author">Author, A to Z</option><option value="added">Date added</option><option value="progress">Most read</option></select></div><div id="grid"></div></div>
     <p class="credit">AfroAura developed by Last Dulani</p>
   </section>
 </main>
@@ -147,10 +153,7 @@ button:focus-visible,select:focus-visible,label:focus-within{outline:3px solid c
   </div>
   <div id="viewer"></div>
   <div id="gest"></div>
-  <div id="bf" class="bar">
-    <div class="r"><span id="ch"></span><span id="pc">0%</span></div>
-    <input id="sl" type="range" min="0" max="100" value="0" disabled aria-label="Book progress">
-  </div>
+  <div id="bf" class="bar"><div class="r"><span id="ch"></span><span id="pc">0%</span></div></div>
 </section>
 
 <div id="bd" hidden></div>
@@ -163,6 +166,7 @@ button:focus-visible,select:focus-visible,label:focus-within{outline:3px solid c
   <div id="bl" class="l" hidden></div>
 </aside>
 <aside id="set" class="pn" hidden>
+  <div class="row"><b>Go to</b><input id="sl" type="range" min="0" max="100" value="0" disabled aria-label="Jump to a place in the book"></div>
   <div class="row"><b>Theme</b>
     <div class="seg"><button data-th="day">Mint</button><button data-th="sepia">Sepia</button><button data-th="night">Night</button></div></div>
   <div class="row"><b>Reading</b>
@@ -187,7 +191,7 @@ const engineOK=async()=>{await libs;return typeof ePub!=='undefined'&&typeof JSZ
 <script>
 const $=s=>document.querySelector(s),D=document;
 let db,book,rend,rec,ready,sv,sx=0,sy=0,lock=null,drag=0,busy=false;
-let S=Object.assign({t:'day',z:100,f:'Georgia,serif',m:'page'},JSON.parse(localStorage.aa||'{}'));
+let S=Object.assign({t:'day',z:100,f:'Georgia,serif',m:'page',s:'recent'},JSON.parse(localStorage.aa||'{}'));
 const TH={day:['#E1F9F4','#0b3b3c'],sepia:['#f3ead6','#4a3a2a'],night:['#0d2526','#cfe7e3']};
 const MOON='M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z';
 const SUN='M12 8a4 4 0 100 8 4 4 0 000-8zM12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4';
@@ -206,8 +210,14 @@ function look(){
   if(rend){const[b,f]=TH[S.t];rend.themes.override('color',f);rend.themes.override('background',b);rend.themes.fontSize(S.z+'%');rend.themes.font(S.f)}
 }
 
+const SORTS={
+  recent:(a,b)=>(b.opened||0)-(a.opened||0),
+  title:(a,b)=>a.title.localeCompare(b.title,undefined,{sensitivity:'base',numeric:true}),
+  author:(a,b)=>(a.author||'~').localeCompare(b.author||'~',undefined,{sensitivity:'base'})||a.title.localeCompare(b.title),
+  added:(a,b)=>(b.added||0)-(a.added||0),
+  progress:(a,b)=>(b.pct||0)-(a.pct||0)};
 async function shelf(){
-  const bs=(await tx('books','readonly',s=>s.getAll())).sort((a,b)=>(b.opened||0)-(a.opened||0));
+  const bs=(await tx('books','readonly',s=>s.getAll())).sort(SORTS[S.s]||SORTS.recent);
   const g=$('#grid');g.innerHTML='';$('#rec').hidden=!bs.length;$('#lib').classList.toggle('has',bs.length>0);
   bs.forEach(b=>{
     const c=D.createElement('div');c.className='card';
@@ -245,14 +255,15 @@ const show=v=>{$('#lib').hidden=v!=='lib';$('#reader').hidden=v!=='reader'};
 const save=()=>{clearTimeout(sv);sv=setTimeout(()=>tx('books','readwrite',s=>s.put(rec)),400)};
 
 async function openBook(id){
-  try{await openBook2(id)}catch(err){console.error(err);toast('Could not open book: '+(err&&err.message||err));show('lib')}
+  try{await openBook2(id)}catch(err){localStorage.removeItem('aa_in');console.error(err);toast('Could not open book: '+(err&&err.message||err));show('lib')}
 }
 async function openBook2(id){
   if(!await engineOK())throw new Error('reader engine not loaded');
   rec=await tx('books','readonly',s=>s.get(id));
   const buf=await tx('files','readonly',s=>s.get(id));
-  if(!buf){toast('This book file is missing');return}
-  rec.opened=Date.now();ready=false;
+  if(!buf){localStorage.removeItem('aa_in');toast('This book file is missing');return}
+  try{const pr=JSON.parse(localStorage.getItem('aap_'+id)||'null');if(pr&&pr.c){rec.cfi=pr.c;rec.pct=pr.p||rec.pct||0}}catch(_){}
+  localStorage.aa_in=id;rec.opened=Date.now();ready=false;
   show('reader');$('#tt').textContent=rec.title;$('#tl').innerHTML='';$('#sl').disabled=true;$('#sl').value=rec.pct||0;$('#pc').textContent=(rec.pct||0)+'%';
   bars(true);
   book=ePub(buf,{openAs:'binary'});
@@ -263,15 +274,28 @@ async function openBook2(id){
   book.ready.then(()=>book.locations.generate(1000)).then(()=>{ready=true;$('#sl').disabled=false;move(rend.currentLocation())});
 }
 
+function persist(){
+  if(!rec)return;
+  try{localStorage.setItem('aap_'+rec.id,JSON.stringify({c:rec.cfi,p:rec.pct,t:Date.now()}));localStorage.aa_in=rec.id}catch(_){}
+}
+function flush(){
+  if(!rec||!book)return;
+  persist();clearTimeout(sv);
+  try{tx('books','readwrite',s=>s.put(rec))}catch(_){}
+}
+D.addEventListener('visibilitychange',()=>{if(D.hidden)flush()});
+addEventListener('pagehide',flush);
 function move(l){
   if(!l||!l.start)return;
   rec.cfi=l.start.cfi;
   if(ready){rec.pct=Math.round(book.locations.percentageFromCfi(rec.cfi)*100)||0;$('#sl').value=rec.pct}
-  $('#pc').textContent=(rec.pct||0)+'%';
+  let pg='';
+  if(ready){const L=book.locations,i=L.locationFromCfi(rec.cfi);pg=' | Page '+((i>0?i:0)+1)+' of '+L.length()}
+  $('#pc').textContent=(rec.pct||0)+'%'+pg;
   const c=book.navigation&&book.navigation.get(l.start.href);
   $('#ch').textContent=c?c.label.trim():'';
   $('#mk').classList.toggle('on',rec.marks.some(m=>m.cfi===rec.cfi));
-  save();
+  persist();save();
 }
 
 function tap(e){
@@ -311,7 +335,7 @@ D.addEventListener('keyup',e=>{if(rend&&!$('#reader').hidden)key(e)});
 $('#sl').onchange=e=>{if(ready)rend.display(book.locations.cfiFromPercentage(e.target.value/100))};
 
 $('#bk').onclick=async()=>{
-  clearTimeout(sv);await tx('books','readwrite',s=>s.put(rec));
+  localStorage.removeItem('aa_in');clearTimeout(sv);await tx('books','readwrite',s=>s.put(rec));
   closeP();book.destroy();rend=book=null;$('#viewer').innerHTML='';$('#viewer').style.transform='none';busy=false;show('lib');shelf();
 };
 
@@ -347,6 +371,7 @@ D.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>{S.t=b.dataset.th;look(
 D.querySelectorAll('[data-md]').forEach(b=>b.onclick=async()=>{
   if(S.m===b.dataset.md)return;S.m=b.dataset.md;look();if(book){closeP();await mount()}});
 $('#th').onclick=$('#th2').onclick=()=>{S.t=S.t==='night'?'day':'night';look()};
+$('#sort').onchange=e=>{S.s=e.target.value;look();shelf()};
 let px=0,py=0,pid=null,pt=0;
 const G=$('#gest'),snap=()=>{const v=$('#viewer');v.style.transition='transform .18s ease-out';v.style.transform='none'};
 G.onpointerdown=e=>{if(busy)return;pid=e.pointerId;px=e.clientX;py=e.clientY;pt=Date.now();lock=null;drag=0;try{G.setPointerCapture(pid)}catch(_){}};
@@ -370,7 +395,8 @@ $('#ff').onchange=e=>{S.f=e.target.value;look()};
 
 setTimeout(()=>{const p=$('#splash');p.classList.add('out');setTimeout(()=>p.remove(),400)},1800);
 (async()=>{
-  db=await openDB();look();shelf();
+  db=await openDB();look();$('#sort').value=S.s;await shelf();
+  const li=localStorage.aa_in;if(li)openBook(li);
   if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 })();
 </script>
