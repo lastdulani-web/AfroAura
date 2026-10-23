@@ -108,8 +108,16 @@ button:focus-visible,select:focus-visible,label:focus-within{outline:3px solid c
 </aside>
 <div id="ts" role="status"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/epub.js/0.3.93/epub.min.js"></script>
+<script>
+// loads the reading engine, trying a backup source if the first one fails
+const libs=(async()=>{
+  const get=u=>new Promise((ok,no)=>{const e=document.createElement('script');e.src=u;e.onload=ok;e.onerror=no;document.head.append(e)});
+  const first=async l=>{for(const u of l){try{await get(u);return}catch(_){}}};
+  await first(['https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js','https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js']);
+  await first(['https://cdn.jsdelivr.net/npm/epubjs@0.3.93/dist/epub.min.js','https://unpkg.com/epubjs@0.3.93/dist/epub.min.js']);
+})();
+const engineOK=async()=>{await libs;return typeof ePub!=='undefined'&&typeof JSZip!=='undefined'};
+</script>
 <script>
 const $=s=>document.querySelector(s),D=document;
 let db,book,rend,rec,ready,sv,sx=0;
@@ -150,7 +158,7 @@ async function shelf(){
 }
 
 $('#add').onchange=async e=>{
-  if(typeof ePub==='undefined'){toast('Reader engine not loaded. Connect to the internet once, then reload.');return}
+  if(!await engineOK()){toast('Reader engine could not load. Check your internet and reload.');return}
   for(const f of e.target.files){
     try{
       if(!/\.epub$/i.test(f.name))throw new Error('not an .epub file');
@@ -172,6 +180,7 @@ async function openBook(id){
   try{await openBook2(id)}catch(err){console.error(err);toast('Could not open book: '+(err&&err.message||err));show('lib')}
 }
 async function openBook2(id){
+  if(!await engineOK())throw new Error('reader engine not loaded');
   rec=await tx('books','readonly',s=>s.get(id));
   const buf=await tx('files','readonly',s=>s.get(id));
   if(!buf){toast('This book file is missing');return}
