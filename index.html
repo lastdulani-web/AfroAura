@@ -137,20 +137,27 @@ button:focus-visible,select:focus-visible,label:focus-within{outline:3px solid c
 #splash .n b{color:#49C2B2}
 #splash .t{font-size:18px;color:rgba(11,59,60,.85);margin-top:12px;animation:pop .8s .22s ease-out both}
 #splash .d{color:rgba(11,59,60,.6);font-size:14px;margin-top:26px;animation:pop .8s .32s ease-out both}
+.brand img{width:40px;height:40px;border-radius:11px;box-shadow:0 0 0 2px rgba(225,249,244,.92);object-fit:cover}
+.logo{font-weight:300;letter-spacing:.16em;font-size:20px}
+.icbtn svg{stroke-linecap:round;stroke-linejoin:round}
+#splash .n{font-weight:300;font-size:34px;letter-spacing:.2em;padding-left:.2em;color:#0b3b3c;margin-top:26px}
+#splash .t{font-size:19px;line-height:1.35;text-align:center;color:rgba(11,59,60,.85);margin-top:14px}
+#splash .d{margin-top:24px}
+#splash .v{position:absolute;bottom:calc(34px + env(safe-area-inset-bottom));padding:0 12px;text-align:center;font-size:11px;letter-spacing:.22em;color:rgba(11,59,60,.6);animation:pop .8s .4s ease-out both}
 </style>
 </head>
 <body data-t="day">
-<div id="splash"><img src="logo.png" alt=""><div class="n">Afro<b>Aura</b></div><div class="t">Immerse yourself in every story.</div><div class="d">Developed by Last Dulani</div></div>
+<div id="splash"><img src="logo.png" alt=""><div class="n">AFROAURA</div><div class="t">Explore new horizons.<br>Discover more.</div><div class="d">Developed by Last Dulani</div><div class="v">EXPLORATION &bull; RESILIENCE &bull; OPPORTUNITY</div></div>
 
 <main id="lib">
   <div class="top">
-    <span class="brand"><img src="bird.png" alt=""><span class="logo">Afro<b>Aura</b></span></span>
-    <button id="th2" class="icbtn" aria-label="Switch light or dark mode"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 010 18z" fill="currentColor"/></svg></button>
+    <span class="brand"><img src="logo.png" alt=""><span class="logo">AFROAURA</span></span>
+    <button id="th2" class="icbtn" aria-label="Switch light or dark mode"><svg viewBox="0 0 24 24"><path id="thp2" d=""/></svg></button>
   </div>
   <section class="welcome">
     <img class="wl" src="logo.png" alt="">
     <h1>Welcome</h1>
-    <p class="tg">Immerse yourself in every story.</p>
+    <p class="tg">Explore new horizons.<br>Discover more.</p>
     <label class="btn">Add books<input id="add" type="file" multiple hidden></label>
     <p class="pv">Your books stay on your phone. They are not uploaded.</p>
     <div id="rec" hidden><div class="rh"><h2>Your books</h2><select id="sort" aria-label="Sort books"><option value="recent">Recently read</option><option value="title">Title, A to Z</option><option value="author">Author, A to Z</option><option value="added">Date added</option><option value="progress">Most read</option></select></div><div id="grid"></div></div>
@@ -233,7 +240,7 @@ function toast(m){const t=$('#ts');t.textContent=m;t.classList.add('on');setTime
 
 function look(){
   D.body.dataset.t=S.t;localStorage.aa=JSON.stringify(S);
-  $('#zv').textContent=S.z+'%';$('#ff').value=S.f;$('#thp').setAttribute('d',S.t==='night'?SUN:MOON);D.querySelectorAll('[data-md]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.md===S.m));
+  $('#zv').textContent=S.z+'%';$('#ff').value=S.f;['#thp','#thp2'].forEach(i=>$(i).setAttribute('d',S.t==='night'?SUN:MOON));D.querySelectorAll('[data-md]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.md===S.m));
   D.querySelectorAll('[data-th]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.th===S.t));
   if(rend){const[b,f]=TH[S.t];rend.themes.override('color',f);rend.themes.override('background',b);rend.themes.fontSize(S.z+'%');rend.themes.font(S.f)}
 }
